@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>B4913D94-BB7C-4F9E-9CAA-0754ACC6BBCE</string>
+	<key>IDESourceControlProjectName</key>
+	<string>DateCell</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>DCC0B98603BD174AAC320FA2643170A41BBF656F</key>
+		<string>github.com:KoheiHayakawa/DateCell.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>DateCell.xcodeproj</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>DCC0B98603BD174AAC320FA2643170A41BBF656F</key>
+		<string>../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>github.com:KoheiHayakawa/DateCell.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>DCC0B98603BD174AAC320FA2643170A41BBF656F</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>DCC0B98603BD174AAC320FA2643170A41BBF656F</string>
+			<key>IDESourceControlWCCName</key>
+			<string>DateCell</string>
+		</dict>
+	</array>
+</dict>
+</plist>
