@@ -25,7 +25,7 @@ class DateCellTableViewController: UITableViewController {
     let kOtherCellID      = "otherCell";      // the remaining cells at the end
 
     var dataArray: [[String: AnyObject]] = []
-    var dateFormatter = NSDateFormatter()
+    var dateFormatter = DateFormatter()
     
     // keep track which indexPath points to the cell with UIDatePicker
     var datePickerIndexPath: NSIndexPath?
@@ -39,32 +39,26 @@ class DateCellTableViewController: UITableViewController {
 
         // setup our data source
         let itemOne = [kTitleKey : "Tap a cell to change its date:"]
-        let itemTwo = [kTitleKey : "Start Date", kDateKey : NSDate()]
-        let itemThree = [kTitleKey : "End Date", kDateKey : NSDate()]
+        let itemTwo = [kTitleKey : "Start Date", kDateKey : NSDate()] as [String : Any]
+        let itemThree = [kTitleKey : "End Date", kDateKey : NSDate()] as [String : Any]
         let itemFour = [kTitleKey : "(other item1)"]
         let itemFive = [kTitleKey : "(other item2)"]
-        dataArray = [itemOne, itemTwo, itemThree, itemFour, itemFive]
+        dataArray = [itemOne as Dictionary<String, AnyObject>, itemTwo as Dictionary<String, AnyObject>, itemThree as Dictionary<String, AnyObject>, itemFour as Dictionary<String, AnyObject>, itemFive as Dictionary<String, AnyObject>]
         
-        dateFormatter.dateStyle = .ShortStyle // show short-style date format
-        dateFormatter.timeStyle = .ShortStyle
+        dateFormatter.dateStyle = .short // show short-style date format
+        dateFormatter.timeStyle = .short
         
         // if the local changes while in the background, we need to be notified so we can update the date
         // format in the table view cells
         //
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(DateCellTableViewController.localeChanged(_:)), name: NSCurrentLocaleDidChangeNotification, object: nil)
-    }
-
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
+        NotificationCenter.default.addObserver(self, selector: #selector(DateCellTableViewController.localeChanged(notif:)), name: NSLocale.currentLocaleDidChangeNotification, object: nil)
     }
 
     
     // MARK: - Locale
-    
     /*! Responds to region format or locale changes.
     */
-    func localeChanged(notif: NSNotification) {
+    @objc func localeChanged(notif: NSNotification) {
     // the user changed the locale (region format) in Settings, so we are notified here to
     // update the date format in the table view cells
     //
@@ -80,8 +74,7 @@ class DateCellTableViewController: UITableViewController {
         var hasDatePicker = false
         
         let targetedRow = indexPath.row + 1
-        
-        let checkDatePickerCell = tableView.cellForRowAtIndexPath(NSIndexPath(forRow: targetedRow, inSection: 0))
+        let checkDatePickerCell = tableView.cellForRow(at: IndexPath(row: targetedRow, section: 0))
         let checkDatePicker = checkDatePickerCell?.viewWithTag(kDatePickerTag)
         
         hasDatePicker = checkDatePicker != nil
@@ -92,10 +85,10 @@ class DateCellTableViewController: UITableViewController {
     */
     func updateDatePicker() {
         if let indexPath = datePickerIndexPath {
-            let associatedDatePickerCell = tableView.cellForRowAtIndexPath(indexPath)
+            let associatedDatePickerCell = tableView.cellForRow(at: indexPath as IndexPath)
             if let targetedDatePicker = associatedDatePickerCell?.viewWithTag(kDatePickerTag) as! UIDatePicker? {
                 let itemData = dataArray[self.datePickerIndexPath!.row - 1]
-                targetedDatePicker.setDate(itemData[kDateKey] as! NSDate, animated: false)
+                targetedDatePicker.setDate((itemData[kDateKey] as! NSDate) as Date, animated: false)
             }
         }
     }
@@ -129,18 +122,11 @@ class DateCellTableViewController: UITableViewController {
 
     
     // MARK: - Table view data source
-
-    override func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
-        return (indexPathHasPicker(indexPath) ? pickerCellRowHeight : tableView.rowHeight)
-    }
-    
-    override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
-        // #warning Potentially incomplete method implementation.
-        // Return the number of sections.
-        return 1
+    override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return (indexPathHasPicker(indexPath: indexPath as NSIndexPath) ? pickerCellRowHeight : tableView.rowHeight)
     }
 
-    override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
   
         if hasInlineDatePicker() {
             // we have a date picker, so allow for it in the number of rows in this section
@@ -149,32 +135,33 @@ class DateCellTableViewController: UITableViewController {
         
         return dataArray.count;
     }
+    
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 
-    override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         var cell: UITableViewCell?
         
         var cellID = kOtherCellID
         
-        if indexPathHasPicker(indexPath) {
+        if indexPathHasPicker(indexPath: indexPath as NSIndexPath) {
             // the indexPath is the one containing the inline date picker
             cellID = kDatePickerCellID     // the current/opened date picker cell
-        } else if indexPathHasDate(indexPath) {
+        } else if indexPathHasDate(indexPath: indexPath as NSIndexPath) {
             // the indexPath is one that contains the date information
             cellID = kDateCellID       // the start/end date cells
         }
         
-        cell = tableView.dequeueReusableCellWithIdentifier(cellID)
+        cell = tableView.dequeueReusableCell(withIdentifier: cellID)
     
         if indexPath.row == 0 {
             // we decide here that first cell in the table is not selectable (it's just an indicator)
-            cell?.selectionStyle = .None;
+            cell?.selectionStyle = .none;
         }
         
         // if we have a date picker open whose cell is above the cell we want to update,
         // then we have one more cell than the model allows
         //
         var modelRow = indexPath.row
-        if (datePickerIndexPath != nil && datePickerIndexPath?.row <= indexPath.row) {
+        if (datePickerIndexPath != nil && (datePickerIndexPath?.row)! <= indexPath.row) {
             modelRow -= 1
         }
         
@@ -184,7 +171,7 @@ class DateCellTableViewController: UITableViewController {
             // we have either start or end date cells, populate their date field
             //
             cell?.textLabel?.text = itemData[kTitleKey] as? String
-            cell?.detailTextLabel?.text = self.dateFormatter.stringFromDate(itemData[kDateKey] as! NSDate)
+            cell?.detailTextLabel?.text = self.dateFormatter.string(from: (itemData[kDateKey] as! NSDate) as Date)
         } else if cellID == kOtherCellID {
             // this cell is a non-date cell, just assign it's text label
             //
@@ -202,16 +189,17 @@ class DateCellTableViewController: UITableViewController {
         
         tableView.beginUpdates()
         
-        let indexPaths = [NSIndexPath(forRow: indexPath.row + 1, inSection: 0)]
-        
+        let indexPaths = [IndexPath(row: indexPath.row + 1, section: 0)]
+
         // check if 'indexPath' has an attached date picker below it
-        if hasPickerForIndexPath(indexPath) {
+        if hasPickerForIndexPath(indexPath: indexPath) {
             // found a picker below it, so remove it
-            tableView.deleteRowsAtIndexPaths(indexPaths, withRowAnimation: .Fade)
+            tableView.deleteRows(at: indexPaths as [IndexPath], with: .fade)
         } else {
             // didn't find a picker below it, so we should insert it
-            tableView.insertRowsAtIndexPaths(indexPaths, withRowAnimation: .Fade)
+            tableView.insertRows(at: indexPaths as [IndexPath], with: .fade)
         }
+        
         tableView.endUpdates()
     }
 
@@ -226,29 +214,30 @@ class DateCellTableViewController: UITableViewController {
         
         var before = false // indicates if the date picker is below "indexPath", help us determine which row to reveal
         if hasInlineDatePicker() {
-            before = datePickerIndexPath?.row < indexPath.row
+            before = (datePickerIndexPath?.row)! < indexPath.row
         }
         
         let sameCellClicked = (datePickerIndexPath?.row == indexPath.row + 1)
         
         // remove any date picker cell if it exists
         if self.hasInlineDatePicker() {
-            tableView.deleteRowsAtIndexPaths([NSIndexPath(forRow: datePickerIndexPath!.row, inSection: 0)], withRowAnimation: .Fade)
+            
+            tableView.deleteRows(at: [IndexPath(row: datePickerIndexPath!.row, section: 0)], with: .fade)
             datePickerIndexPath = nil
         }
         
         if !sameCellClicked {
             // hide the old date picker and display the new one
             let rowToReveal = (before ? indexPath.row - 1 : indexPath.row)
-            let indexPathToReveal = NSIndexPath(forRow: rowToReveal, inSection: 0)
-            
-            toggleDatePickerForSelectedIndexPath(indexPathToReveal)
-            datePickerIndexPath = NSIndexPath(forRow: indexPathToReveal.row + 1, inSection: 0)
+            let indexPathToReveal =  IndexPath(row: rowToReveal, section: 0)
+
+            toggleDatePickerForSelectedIndexPath(indexPath: indexPathToReveal as NSIndexPath)
+            datePickerIndexPath = IndexPath(row: indexPathToReveal.row + 1, section: 0) as NSIndexPath
         }
         
         // always deselect the row containing the start or end date
-        tableView.deselectRowAtIndexPath(indexPath, animated:true)
-        
+        tableView.deselectRow(at: indexPath as IndexPath, animated:true)
+    
         tableView.endUpdates()
         
         // inform our date picker of the current date to match the current cell
@@ -261,26 +250,26 @@ class DateCellTableViewController: UITableViewController {
     */
     /*
     func displayExternalDatePickerForRowAtIndexPath(indexPath: NSIndexPath) {
-        
+     
         // first update the date picker's date value according to our model
         let itemData: AnyObject = self.dataArray[indexPath.row]
         self.pickerView.setDate(itemData.valueForKey(kDateKey) as NSDate, animated: true)
-        
+     
         // the date picker might already be showing, so don't add it to our view
         if self.pickerView.superview == nil {
             var startFrame = self.pickerView.frame
             var endFrame = self.pickerView.frame
-            
+     
             // the start position is below the bottom of the visible frame
             startFrame.origin.y = CGRectGetHeight(self.view.frame)
-            
+     
             // the end position is slid up by the height of the view
             endFrame.origin.y = startFrame.origin.y - CGRectGetHeight(endFrame)
-            
+     
             self.pickerView.frame = startFrame
-            
+     
             self.view.addSubview(self.pickerView)
-            
+     
             // animate the date picker into view
             UIView.animateWithDuration(kPickerAnimationDuration, animations: { self.pickerView.frame = endFrame }, completion: {(value: Bool) in
                 // add the "Done" button to the nav bar
@@ -292,13 +281,13 @@ class DateCellTableViewController: UITableViewController {
     
     
     // MARK: - UITableViewDelegate
-    override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
-        let cell = tableView.cellForRowAtIndexPath(indexPath)
+        let cell = tableView.cellForRow(at: indexPath as IndexPath)
         if cell?.reuseIdentifier == kDateCellID {
-            displayInlineDatePickerForRowAtIndexPath(indexPath)
+            displayInlineDatePickerForRowAtIndexPath(indexPath: indexPath as NSIndexPath)
         } else {
-            tableView.deselectRowAtIndexPath(indexPath, animated: true)
+            tableView.deselectRow(at: indexPath as IndexPath, animated: true)
         }
     }
     
@@ -311,31 +300,34 @@ class DateCellTableViewController: UITableViewController {
     */
     
     
-    @IBAction func dateAction(sender: UIDatePicker) {
-        
+    
+    @IBAction func dateAction(_ sender: UIDatePicker) {
+    
         var targetedCellIndexPath: NSIndexPath?
         
         if self.hasInlineDatePicker() {
             // inline date picker: update the cell's date "above" the date picker cell
             //
-            targetedCellIndexPath = NSIndexPath(forRow: datePickerIndexPath!.row - 1, inSection: 0)
+            targetedCellIndexPath = IndexPath(row: datePickerIndexPath!.row - 1, section: 0) as NSIndexPath
+            
         } else {
             // external date picker: update the current "selected" cell's date
-            targetedCellIndexPath = tableView.indexPathForSelectedRow!
+            targetedCellIndexPath = tableView.indexPathForSelectedRow! as NSIndexPath
         }
         
-        let cell = tableView.cellForRowAtIndexPath(targetedCellIndexPath!)
+        let cell = tableView.cellForRow(at: targetedCellIndexPath! as IndexPath)
         let targetedDatePicker = sender
         
         // update our data model
         var itemData = dataArray[targetedCellIndexPath!.row]
-        itemData[kDateKey] = targetedDatePicker.date
+        itemData[kDateKey] = targetedDatePicker.date as AnyObject
         dataArray[targetedCellIndexPath!.row] = itemData
         
         // update the cell's date string
-        cell?.detailTextLabel?.text = dateFormatter.stringFromDate(targetedDatePicker.date)
+        cell?.detailTextLabel?.text = dateFormatter.string(from: targetedDatePicker.date)
         
 
     }
 
 }
+
