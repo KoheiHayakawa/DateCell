@@ -10,19 +10,19 @@ import UIKit
 
 class DateCellTableViewController: UITableViewController {
     
-    let kPickerAnimationDuration = 0.40 // duration for the animation to slide the date picker into view
-    let kDatePickerTag           = 99   // view tag identifiying the date picker view
+    let pickerAnimationDuration = 0.40 // duration for the animation to slide the date picker into view
+    let datePickerTag           = 99   // view tag identifiying the date picker view
     
-    let kTitleKey = "title" // key for obtaining the data source item's title
-    let kDateKey  = "date"  // key for obtaining the data source item's date value
+    let titleKey = "title" // key for obtaining the data source item's title
+    let dateKey  = "date"  // key for obtaining the data source item's date value
     
     // keep track of which rows have date cells
-    let kDateStartRow = 1
-    let kDateEndRow   = 2
+    let dateStartRow = 1
+    let dateEndRow   = 2
     
-    let kDateCellID       = "dateCell";       // the cells with the start or end date
-    let kDatePickerCellID = "datePickerCell"; // the cell containing the date picker
-    let kOtherCellID      = "otherCell";      // the remaining cells at the end
+    let dateCellID       = "dateCell";       // the cells with the start or end date
+    let datePickerCellID = "datePickerCell"; // the cell containing the date picker
+    let otherCellID      = "otherCell";      // the remaining cells at the end
 
     var dataArray: [[String: AnyObject]] = []
     var dateFormatter = DateFormatter()
@@ -38,11 +38,11 @@ class DateCellTableViewController: UITableViewController {
         super.viewDidLoad()
 
         // setup our data source
-        let itemOne = [kTitleKey : "Tap a cell to change its date:"]
-        let itemTwo = [kTitleKey : "Start Date", kDateKey : NSDate()] as [String : Any]
-        let itemThree = [kTitleKey : "End Date", kDateKey : NSDate()] as [String : Any]
-        let itemFour = [kTitleKey : "(other item1)"]
-        let itemFive = [kTitleKey : "(other item2)"]
+        let itemOne = [titleKey : "Tap a cell to change its date:"]
+        let itemTwo = [titleKey : "Start Date", dateKey : NSDate()] as [String : Any]
+        let itemThree = [titleKey : "End Date", dateKey : NSDate()] as [String : Any]
+        let itemFour = [titleKey : "(other item1)"]
+        let itemFive = [titleKey : "(other item2)"]
         dataArray = [itemOne as Dictionary<String, AnyObject>, itemTwo as Dictionary<String, AnyObject>, itemThree as Dictionary<String, AnyObject>, itemFour as Dictionary<String, AnyObject>, itemFive as Dictionary<String, AnyObject>]
         
         dateFormatter.dateStyle = .short // show short-style date format
@@ -75,7 +75,7 @@ class DateCellTableViewController: UITableViewController {
         
         let targetedRow = indexPath.row + 1
         let checkDatePickerCell = tableView.cellForRow(at: IndexPath(row: targetedRow, section: 0))
-        let checkDatePicker = checkDatePickerCell?.viewWithTag(kDatePickerTag)
+        let checkDatePicker = checkDatePickerCell?.viewWithTag(datePickerTag)
         
         hasDatePicker = checkDatePicker != nil
         return hasDatePicker
@@ -86,9 +86,9 @@ class DateCellTableViewController: UITableViewController {
     func updateDatePicker() {
         if let indexPath = datePickerIndexPath {
             let associatedDatePickerCell = tableView.cellForRow(at: indexPath as IndexPath)
-            if let targetedDatePicker = associatedDatePickerCell?.viewWithTag(kDatePickerTag) as! UIDatePicker? {
+            if let targetedDatePicker = associatedDatePickerCell?.viewWithTag(datePickerTag) as! UIDatePicker? {
                 let itemData = dataArray[self.datePickerIndexPath!.row - 1]
-                targetedDatePicker.setDate((itemData[kDateKey] as! NSDate) as Date, animated: false)
+                targetedDatePicker.setDate(itemData[dateKey] as! Date, animated: false)
             }
         }
     }
@@ -114,7 +114,7 @@ class DateCellTableViewController: UITableViewController {
     func indexPathHasDate(indexPath: NSIndexPath) -> Bool {
         var hasDate = false
         
-        if (indexPath.row == kDateStartRow) || (indexPath.row == kDateEndRow || (hasInlineDatePicker() && (indexPath.row == kDateEndRow + 1))) {
+        if (indexPath.row == dateStartRow) || (indexPath.row == dateEndRow || (hasInlineDatePicker() && (indexPath.row == dateEndRow + 1))) {
             hasDate = true
         }
         return hasDate
@@ -140,14 +140,14 @@ class DateCellTableViewController: UITableViewController {
 
         var cell: UITableViewCell?
         
-        var cellID = kOtherCellID
+        var cellID = otherCellID
         
         if indexPathHasPicker(indexPath: indexPath as NSIndexPath) {
             // the indexPath is the one containing the inline date picker
-            cellID = kDatePickerCellID     // the current/opened date picker cell
+            cellID = datePickerCellID     // the current/opened date picker cell
         } else if indexPathHasDate(indexPath: indexPath as NSIndexPath) {
             // the indexPath is one that contains the date information
-            cellID = kDateCellID       // the start/end date cells
+            cellID = dateCellID       // the start/end date cells
         }
         
         cell = tableView.dequeueReusableCell(withIdentifier: cellID)
@@ -167,15 +167,15 @@ class DateCellTableViewController: UITableViewController {
         
         let itemData = dataArray[modelRow]
         
-        if cellID == kDateCellID {
+        if cellID == dateCellID {
             // we have either start or end date cells, populate their date field
             //
-            cell?.textLabel?.text = itemData[kTitleKey] as? String
-            cell?.detailTextLabel?.text = self.dateFormatter.string(from: (itemData[kDateKey] as! NSDate) as Date)
-        } else if cellID == kOtherCellID {
+            cell?.textLabel?.text = itemData[titleKey] as? String
+            cell?.detailTextLabel?.text = self.dateFormatter.string(from: (itemData[dateKey] as! NSDate) as Date)
+        } else if cellID == otherCellID {
             // this cell is a non-date cell, just assign it's text label
             //
-            cell?.textLabel?.text = itemData[kTitleKey] as? String
+            cell?.textLabel?.text = itemData[titleKey] as? String
         }
         
         return cell!
@@ -261,19 +261,21 @@ class DateCellTableViewController: UITableViewController {
             var endFrame = self.pickerView.frame
      
             // the start position is below the bottom of the visible frame
-            startFrame.origin.y = CGRectGetHeight(self.view.frame)
+            startFrame.origin.y = self.view.frame.height
      
             // the end position is slid up by the height of the view
-            endFrame.origin.y = startFrame.origin.y - CGRectGetHeight(endFrame)
+            endFrame.origin.y = startFrame.origin.y - endFrame.height
      
             self.pickerView.frame = startFrame
      
             self.view.addSubview(self.pickerView)
      
             // animate the date picker into view
-            UIView.animateWithDuration(kPickerAnimationDuration, animations: { self.pickerView.frame = endFrame }, completion: {(value: Bool) in
+            UIView.animate(withDuration: pickerAnimationDuration, animations: {
+                self.pickerView.frame = endFrame
+            }, completion: { (value: Bool) in
                 // add the "Done" button to the nav bar
-                //self.navigationItem.rightBarButtonItem = self.doneButton
+                self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .done, target: nil, action: nil)
             })
         }
     }
@@ -284,7 +286,7 @@ class DateCellTableViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
         let cell = tableView.cellForRow(at: indexPath as IndexPath)
-        if cell?.reuseIdentifier == kDateCellID {
+        if cell?.reuseIdentifier == dateCellID {
             displayInlineDatePickerForRowAtIndexPath(indexPath: indexPath as NSIndexPath)
         } else {
             tableView.deselectRow(at: indexPath as IndexPath, animated: true)
@@ -320,7 +322,7 @@ class DateCellTableViewController: UITableViewController {
         
         // update our data model
         var itemData = dataArray[targetedCellIndexPath!.row]
-        itemData[kDateKey] = targetedDatePicker.date as AnyObject
+        itemData[dateKey] = targetedDatePicker.date as AnyObject
         dataArray[targetedCellIndexPath!.row] = itemData
         
         // update the cell's date string
