@@ -30,7 +30,7 @@ class DateCellTableViewController: UITableViewController {
     // keep track which indexPath points to the cell with UIDatePicker
     var datePickerIndexPath: NSIndexPath?
     
-    var pickerCellRowHeight: CGFloat = 216
+    var pickerCellRowHeight: CGFloat = 382 // 216 for wheels
     
     @IBOutlet var pickerView: UIDatePicker!
 
